@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +29,9 @@ class ResourceRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        // Her testten önce veritabanını temizleyelim ki testler birbirini etkilemesin
+        resourceRepository.deleteAll();
+
         testResource = Resource.builder()
                 .type(ResourceType.METERING_POINT)
                 .countryCode("EE")
@@ -165,6 +167,7 @@ class ResourceRepositoryTest {
 
     @Test
     void findAllWithCharacteristics_Success() {
+        // Arrange
         Resource resource1 = Resource.builder()
                 .type(ResourceType.METERING_POINT)
                 .countryCode("EE")
@@ -195,4 +198,25 @@ class ResourceRepositoryTest {
                 .build();
 
         resourceRepository.save(resource1);
-        resourceRepository.
+        resourceRepository.save(resource2);
+
+        // Act
+        List<Resource> allResources = resourceRepository.findAllWithCharacteristics();
+
+        // Assert
+        assertThat(allResources).hasSize(2);
+
+        Resource foundResource1 = allResources.stream()
+                .filter(r -> r.getCountryCode().equals("EE"))
+                .findFirst().orElseThrow();
+
+        assertThat(foundResource1.getCharacteristics()).hasSize(1);
+        assertThat(foundResource1.getCharacteristics().get(0).getCode()).isEqualTo("ALL1");
+
+        Resource foundResource2 = allResources.stream()
+                .filter(r -> r.getCountryCode().equals("FI"))
+                .findFirst().orElseThrow();
+
+        assertThat(foundResource2.getCharacteristics()).isEmpty();
+    }
+}
