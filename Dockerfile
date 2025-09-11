@@ -3,18 +3,18 @@ FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-# ÖNEMLİ: Önce sadece pom.xml'i kopyala (cache için)
+# IMPORTANT: COPY pom.xml for caching
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
 
-# Dependencies'i indir ve CACHE'LE!
+# Dependencies LOAD & CACHE!
 RUN mvn dependency:go-offline -B
 
-# Şimdi source code'u kopyala
+# Copy Sourcecode
 COPY src ./src
 
-# Build (dependencies zaten cache'de)
+# Build (dependencies in cache)
 RUN mvn clean package -DskipTests
 
 # Runtime stage

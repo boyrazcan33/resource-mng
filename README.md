@@ -2,13 +2,26 @@
 
 Spring Boot REST API for managing energy resources (metering points and connection points) across Estonia and Finland with Kafka event publishing.
 
+## System Overview
+
+![UML Diagram](UML.png)
+
+This UML diagram shows the application structure with ~95% accuracy - it helps understand the overall architecture and component relationships, though some implementation details may vary.
+
+## Test Coverage
+
+The project includes comprehensive test classes to ensure code quality and functionality:
+- **Unit Tests**: `ResourceServiceTest` - Service layer business logic testing
+- **Integration Tests**: `AbstractIntegrationTest`, `ResourceControllerIntegrationTest`, `ResourceRepositoryTest` - Full API and database testing
+- **Application Tests**: `ResourceManagementApplicationTests` - Spring Boot context loading
+
 ## Quick Start
 
 **Prerequisites:** Docker Desktop only
 
 ```bash
-git clone <repository-url>
-cd resource-management
+git clone https://github.com/boyrazcan33/resource-mng  # or <repository-url>
+cd resource-mng  # actual repo directory name
 docker-compose up --build
 ```
 
@@ -19,9 +32,15 @@ Access the services:
 
 ## Quick Test Flow
 
-1. **Build & Start**: `docker-compose up --build`
-2. **Test API**: Go to http://localhost:8080/swagger-ui.html → Create a resource
-3. **Check Events**: Go to http://localhost:8090 → Topics → resource-events → Messages
+1. **Build & Start**: `docker-compose up --build` (Takes 1-3 minutes)
+2. **Test API**:
+    - Go to http://localhost:8080/swagger-ui.html
+    - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
+    - (This endpoint requires no input data, unlike creating new resources)
+3. **Check Events**:
+    - Go to http://localhost:8090
+    - Click "Topics" → Click "resource-events" → Click "Messages"
+    - You can see your Kafka events here
 
 ## API Endpoints
 
@@ -65,9 +84,20 @@ Application starts with 4 pre-loaded resources:
 
 ## Running Tests
 
+**macOS/Linux (Bash):**
 ```bash
+chmod +x ./mvnw
+./mvnw dependency:go-offline -B
 ./mvnw test
 ```
+
+**Windows (PowerShell):**
+```powershell
+./mvnw dependency:go-offline -B
+./mvnw test
+```
+
+Note: First dependency download may take 5-10 minutes. The `dependency:go-offline` is only needed for first attempt. Make sure you're using the correct terminal (Bash/PowerShell) for your system.
 
 ## Stopping the Application
 
