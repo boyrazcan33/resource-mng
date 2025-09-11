@@ -13,17 +13,18 @@ This UML diagram shows the application structure with ~95% accuracy - it helps u
 The project includes comprehensive test classes to ensure code quality and functionality:
 - **Unit Tests**: `ResourceServiceTest` - Service layer business logic testing
 - **Integration Tests**: `AbstractIntegrationTest`, `ResourceControllerIntegrationTest`, `ResourceRepositoryTest` - Full API and database testing
-- **Application Tests**: `ResourceManagementApplicationTests` - Spring Boot context loading
 
 ## Quick Start
 
 **Prerequisites:** Docker Desktop only
 
 ```bash
-git clone https://github.com/boyrazcan33/resource-mng  # or <repository-url>
-cd resource-mng  # actual repo directory name
+git clone https://github.com/boyrazcan33/resource-mng
+cd resource-mng
 docker-compose up --build
 ```
+
+**Alternative (if Git not installed):** Download ZIP from GitHub → Extract → Open terminal in extracted folder → Run `docker-compose up --build`
 
 Access the services:
 - **API Documentation**: http://localhost:8080/swagger-ui.html
@@ -34,13 +35,13 @@ Access the services:
 
 1. **Build & Start**: `docker-compose up --build` (Takes 1-3 minutes)
 2. **Test API**:
-    - Go to http://localhost:8080/swagger-ui.html
-    - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
-    - (This endpoint requires no input data, unlike creating new resources)
+   - Go to http://localhost:8080/swagger-ui.html
+   - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
+   - (This endpoint requires no input data, unlike creating new resources)
 3. **Check Events**:
-    - Go to http://localhost:8090
-    - Click "Topics" → Click "resource-events" → Click "Messages"
-    - You can see your Kafka events here
+   - Go to http://localhost:8090
+   - Click "Topics" → Click "resource-events" → Click "Messages"
+   - You can see your Kafka events here
 
 ## API Endpoints
 
@@ -93,6 +94,9 @@ chmod +x ./mvnw
 
 **Windows (PowerShell):**
 ```powershell
+# If you get execution policy error, run this first:
+# Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
 ./mvnw dependency:go-offline -B
 ./mvnw test
 ```
