@@ -46,6 +46,11 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - resource-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -64,7 +69,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # BuildKit kullan
       cache_from:
         - maven:3.9-eclipse-temurin-21
         - eclipse-temurin:21-jre-alpine
@@ -72,6 +76,8 @@ services:
     container_name: resource-management-app
     depends_on:
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     ports:
       - "8080:8080"
