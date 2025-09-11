@@ -14,9 +14,6 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${server.port:8080}")
-    private String serverPort;
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -32,10 +29,10 @@ public class OpenApiConfig {
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:" + serverPort + "/api/v1")
+                                .url("http://localhost:8080")  // <-- ÖNEMLİ: /api/v1 KALDIRDIK!
                                 .description("Local development server"),
                         new Server()
-                                .url("http://localhost:" + serverPort + "/api/v1")
+                                .url("http://localhost:8080")
                                 .description("Docker environment")
                 ));
     }
