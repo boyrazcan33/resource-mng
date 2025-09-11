@@ -32,7 +32,7 @@ Access the services:
 
 ## Quick Test Flow
 
-1. **Build & Start**: `docker-compose up --build` (Takes 3-6 minutes)
+1. **Build & Start**: `docker-compose up --build` (Takes max. 10 minutes, average: 4 mins)
 2. **Test API**:
    - Go to http://localhost:8080/swagger-ui.html
    - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
@@ -100,7 +100,7 @@ chmod +x ./mvnw
 ./mvnw test
 ```
 
-Note: First dependency download may take 6-9 minutes. The `dependency:go-offline` is only needed for first attempt. Make sure you're using the correct terminal (Bash/PowerShell) for your system.
+Note: First dependency download take max. 15 minutes (average: 8 mins). The `dependency:go-offline` is only needed for first attempt. Make sure you're using the correct terminal (Bash/PowerShell) for your system.
 
 ## Stopping the Application
 
