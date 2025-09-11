@@ -24,7 +24,6 @@ cd resource-mng
 docker-compose up --build
 ```
 
-**Alternative (if Git not installed):** Download ZIP from GitHub → Extract → Open terminal in extracted folder → Run `docker-compose up --build`
 
 Access the services:
 - **API Documentation**: http://localhost:8080/swagger-ui.html
@@ -33,7 +32,7 @@ Access the services:
 
 ## Quick Test Flow
 
-1. **Build & Start**: `docker-compose up --build` (Takes 1-3 minutes)
+1. **Build & Start**: `docker-compose up --build` (Takes 3-6 minutes)
 2. **Test API**:
    - Go to http://localhost:8080/swagger-ui.html
    - For example, try POST `/api/v1/resources/export-all` → Click "Try it out" → Click "Execute"
@@ -101,7 +100,7 @@ chmod +x ./mvnw
 ./mvnw test
 ```
 
-Note: First dependency download may take 5-10 minutes. The `dependency:go-offline` is only needed for first attempt. Make sure you're using the correct terminal (Bash/PowerShell) for your system.
+Note: First dependency download may take 6-9 minutes. The `dependency:go-offline` is only needed for first attempt. Make sure you're using the correct terminal (Bash/PowerShell) for your system.
 
 ## Stopping the Application
 
