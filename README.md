@@ -1,10 +1,10 @@
 # Resource Management API
 
-A comprehensive Spring Boot REST API for managing energy resources (metering points and connection points) across Estonia and Finland with real-time Kafka event streaming.
+Spring Boot REST API for managing energy resources (metering points and connection points) across Estonia and Finland with Kafka event publishing.
 
-## 🚀 Quick Start
+## Quick Start
 
-**Prerequisites:** Docker Desktop only (Java, Maven, PostgreSQL, Kafka not required)
+**Prerequisites:** Docker Desktop only
 
 ```bash
 git clone <repository-url>
@@ -12,29 +12,18 @@ cd resource-management
 docker-compose up --build
 ```
 
-
+Access the services:
 - **API Documentation**: http://localhost:8080/swagger-ui.html
 - **Kafka Events UI**: http://localhost:8090
 - **Database**: localhost:5432 (postgres/postgres)
 
-## ✅ Requirements Fulfilled
+## Quick Test Flow
 
-This API fully meets the assignment requirements:
+1. **Build & Start**: `docker-compose up --build`
+2. **Test API**: Go to http://localhost:8080/swagger-ui.html → Create a resource
+3. **Check Events**: Go to http://localhost:8090 → Topics → resource-events → Messages
 
-### Core REST Operations
-- ✅ **Creating new resources** with location and characteristics
-- ✅ **Retrieving resources** (both single by ID and filtered lists)
-- ✅ **Updating existing resources**, locations, and characteristics
-- ✅ **Deleting resources**
-
-### Additional Features
-- ✅ **Kafka Integration**: Real-time events on CREATE/UPDATE/DELETE
-- ✅ **Bulk Export**: Export all resources to Kafka
-- ✅ **Sample Data**: 4 pre-loaded resources (Estonia & Finland)
-- ✅ **Comprehensive Testing**: Unit, Integration, Repository tests
-- ✅ **Docker Ready**: Complete containerized setup
-
-## 📋 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -45,137 +34,43 @@ This API fully meets the assignment requirements:
 | DELETE | `/api/v1/resources/{id}` | Delete resource |
 | POST | `/api/v1/resources/export-all` | Export all resources to Kafka |
 
-### Query Options
+## Testing the API
 
-You can retrieve resources using various filters:
+Open http://localhost:8080/swagger-ui.html and try any endpoint interactively. Check Kafka events at http://localhost:8090.
 
-```bash
-# Get single resource by ID
-GET /api/v1/resources/{id}
+## Kafka Events
 
-# Get all resources
-GET /api/v1/resources
-
-# Filter by country code
-GET /api/v1/resources?countryCode=EE
-
-# Filter by resource type  
-GET /api/v1/resources?type=METERING_POINT
-
-# Combine filters
-GET /api/v1/resources?countryCode=EE&type=METERING_POINT
-
-# Pagination and sorting
-GET /api/v1/resources?page=0&size=20&sort=createdAt,desc
-```
-
-## 🧪 Testing the API
-
-### Option 1: Swagger UI (Recommended)
-1. Open http://localhost:8080/swagger-ui.html
-2. Try any endpoint interactively
-3. Check Kafka events at http://localhost:8090
-
-
-```
-
-## 📊 Real-time Kafka Events
-
-Every resource operation automatically publishes events:
-
+Every resource operation automatically publishes events to `resource-events` topic:
 1. Create/Update/Delete a resource via API
-2. Event is published to `resource-events` topic
+2. Event is published to Kafka
 3. View events in Kafka UI: http://localhost:8090
-    - Click **Topics** → **resource-events** → **Messages**
 
-## 📁 Project Structure
+## Technology Stack
 
-```
-src/
-├── main/java/com/energia/resourcemanagement/
-│   ├── controller/     # REST endpoints
-│   ├── service/        # Business logic
-│   ├── repository/     # Data access (JPA)
-│   ├── domain/         # Entities & Enums
-│   ├── dto/            # Request/Response objects
-│   ├── kafka/          # Event publishing
-│   ├── mapper/         # MapStruct mapping
-│   ├── exception/      # Error handling
-│   └── config/         # Spring configuration
-├── main/resources/
-│   ├── db/migration/   # Flyway database schemas
-│   └── application*.properties
-└── test/               # Comprehensive test suite
-    ├── integration/    # API & Repository tests
-    └── unit/          # Service layer tests
-```
+- Java 21 + Spring Boot 3.5.5
+- PostgreSQL 15
+- Apache Kafka
+- Flyway (database migrations)
+- MapStruct (DTO mapping)
+- Docker & Docker Compose
+- Swagger/OpenAPI (API documentation)
 
-## 🛠 Technology Stack
+## Sample Data
 
-- **Java 21** + **Spring Boot 3.5.5**
-- **PostgreSQL 15** (database)
-- **Apache Kafka** (event streaming)
-- **Flyway** (database migrations)
-- **MapStruct** (DTO mapping)
-- **Testcontainers** (integration testing)
-- **Docker & Docker Compose** (containerization)
-- **Swagger/OpenAPI** (API documentation)
+Application starts with 4 pre-loaded resources:
+1. Estonia Metering Point (Tallinn) - Residential consumption
+2. Finland Connection Point (Helsinki) - Active status
+3. Finland Metering Point (Helsinki) - Industrial consumption
+4. Estonia Connection Point (Tallinn) - Inactive status
 
-## 🎯 Sample Data
-
-The application starts with 4 pre-loaded resources:
-
-1. **Estonia Metering Point** (Tallinn) - Residential consumption + Type 2 charging
-2. **Finland Connection Point** (Helsinki) - Active status + Commercial consumption
-3. **Finland Metering Point** (Helsinki) - Industrial consumption + CCS charging
-4. **Estonia Connection Point** (Tallinn) - Inactive status
-
-## 🔧 Development Features
-
-- **Optimistic Locking**: Version control for concurrent updates
-- **Validation**: Comprehensive input validation with detailed error messages
-- **Error Handling**: Global exception handler with structured error responses
-- **Auditing**: Automatic `created_at` and `updated_at` timestamps
-- **Health Checks**: Docker health checks for all services
-- **Logging**: Structured logging with different levels per environment
-
-## 🧩 Domain Model
-
-```
-Resource
-├── id (UUID)
-├── type (METERING_POINT | CONNECTION_POINT)
-├── countryCode (EE | FI)
-├── location (embedded)
-│   ├── streetAddress
-│   ├── city
-│   ├── postalCode
-│   └── countryCode
-├── characteristics (one-to-many)
-│   ├── code (max 5 chars)
-│   ├── type (CONSUMPTION_TYPE | CHARGING_POINT | CONNECTION_POINT_STATUS)
-│   └── value
-├── createdAt
-├── updatedAt
-└── version (optimistic locking)
-```
-
-## 🏃‍♂️ Running Tests
+## Running Tests
 
 ```bash
-# Run all tests (requires Docker)
 ./mvnw test
-
-# Run specific test category
-./mvnw test -Dtest="*IntegrationTest"
-./mvnw test -Dtest="*UnitTest"
 ```
 
-## 🛑 Stopping the Application
+## Stopping the Application
 
 ```bash
-docker-compose down        # Stop containers
-docker-compose down -v     # Stop and remove volumes
+docker-compose down
 ```
-
-
