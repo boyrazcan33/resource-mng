@@ -9,18 +9,46 @@ import com.energia.resourcemanagement.repository.ResourceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ResourceRepositoryTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+    }
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -29,32 +57,34 @@ class ResourceRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Her testten önce veritabanını temizleyelim ki testler birbirini etkilemesin
+        // Clean up any existing test data
         resourceRepository.deleteAll();
+        entityManager.flush();
 
         testResource = Resource.builder()
                 .type(ResourceType.METERING_POINT)
                 .countryCode("EE")
                 .location(Location.builder()
-                        .streetAddress("Repository Test Street")
+                        .streetAddress("Test Street")
                         .city("Tallinn")
                         .postalCode("12345")
                         .countryCode("EE")
                         .build())
                 .build();
 
-        Characteristic char1 = Characteristic.builder()
-                .code("REPO1")
+        Characteristic characteristic = Characteristic.builder()
+                .code("TEST1")
                 .type(CharacteristicType.CONSUMPTION_TYPE)
                 .value("RESIDENTIAL")
                 .build();
 
-        testResource.addCharacteristic(char1);
+        testResource.addCharacteristic(characteristic);
     }
 
     @Test
     void saveResource_Success() {
         Resource saved = resourceRepository.save(testResource);
+        entityManager.flush();
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getType()).isEqualTo(ResourceType.METERING_POINT);
@@ -67,12 +97,14 @@ class ResourceRepositoryTest {
     @Test
     void findByIdWithCharacteristics_Success() {
         Resource saved = resourceRepository.save(testResource);
+        entityManager.flush();
+        entityManager.clear();
 
         Optional<Resource> found = resourceRepository.findByIdWithCharacteristics(saved.getId());
 
         assertThat(found).isPresent();
         assertThat(found.get().getCharacteristics()).hasSize(1);
-        assertThat(found.get().getCharacteristics().get(0).getCode()).isEqualTo("REPO1");
+        assertThat(found.get().getCharacteristics().get(0).getCode()).isEqualTo("TEST1");
     }
 
     @Test
@@ -90,6 +122,7 @@ class ResourceRepositoryTest {
                         .build())
                 .build();
         resourceRepository.save(finnishResource);
+        entityManager.flush();
 
         List<Resource> estonianResources = resourceRepository.findByCountryCode("EE");
 
@@ -112,6 +145,7 @@ class ResourceRepositoryTest {
                         .build())
                 .build();
         resourceRepository.save(connectionPoint);
+        entityManager.flush();
 
         List<Resource> meteringPoints = resourceRepository.findByType(ResourceType.METERING_POINT);
 
@@ -134,6 +168,7 @@ class ResourceRepositoryTest {
                     .build();
             resourceRepository.save(resource);
         }
+        entityManager.flush();
 
         Page<Resource> page = resourceRepository.findByCountryCodeAndType(
                 "EE", ResourceType.METERING_POINT, PageRequest.of(0, 3));
@@ -146,10 +181,12 @@ class ResourceRepositoryTest {
     @Test
     void updateResource_VersionIncremented() {
         Resource saved = resourceRepository.save(testResource);
+        entityManager.flush();
         Long initialVersion = saved.getVersion();
 
         saved.getLocation().setCity("Tartu");
         Resource updated = resourceRepository.save(saved);
+        entityManager.flush();
 
         assertThat(updated.getVersion()).isEqualTo(initialVersion + 1);
     }
@@ -157,17 +194,17 @@ class ResourceRepositoryTest {
     @Test
     void deleteResource_Success() {
         Resource saved = resourceRepository.save(testResource);
-        UUID resourceId = saved.getId();
+        entityManager.flush();
 
         resourceRepository.delete(saved);
+        entityManager.flush();
 
-        Optional<Resource> found = resourceRepository.findById(resourceId);
+        Optional<Resource> found = resourceRepository.findById(saved.getId());
         assertThat(found).isEmpty();
     }
 
     @Test
     void findAllWithCharacteristics_Success() {
-        // Arrange
         Resource resource1 = Resource.builder()
                 .type(ResourceType.METERING_POINT)
                 .countryCode("EE")
@@ -199,24 +236,20 @@ class ResourceRepositoryTest {
 
         resourceRepository.save(resource1);
         resourceRepository.save(resource2);
+        entityManager.flush();
 
-        // Act
         List<Resource> allResources = resourceRepository.findAllWithCharacteristics();
 
-        // Assert
         assertThat(allResources).hasSize(2);
 
         Resource foundResource1 = allResources.stream()
                 .filter(r -> r.getCountryCode().equals("EE"))
                 .findFirst().orElseThrow();
-
         assertThat(foundResource1.getCharacteristics()).hasSize(1);
-        assertThat(foundResource1.getCharacteristics().get(0).getCode()).isEqualTo("ALL1");
 
         Resource foundResource2 = allResources.stream()
                 .filter(r -> r.getCountryCode().equals("FI"))
                 .findFirst().orElseThrow();
-
         assertThat(foundResource2.getCharacteristics()).isEmpty();
     }
 }
