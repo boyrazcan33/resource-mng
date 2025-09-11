@@ -7,6 +7,7 @@ import com.energia.resourcemanagement.service.ResourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -51,7 +52,7 @@ public class ResourceController {
     public ResponseEntity<Page<ResourceResponse>> getAllResources(
             @RequestParam(required = false) String countryCode,
             @RequestParam(required = false) String type,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         log.info("GET /api/v1/resources - Fetching resources with filters: countryCode={}, type={}",
                 countryCode, type);
